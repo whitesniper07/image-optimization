@@ -45,8 +45,8 @@ inline void startTimer() {
 
 // Function to stop the timer and return time in milliseconds
 inline float stopTimer() {
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> duration = end - timer_start;
+    const auto end = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration<float, std::milli> duration = end - timer_start;
     return duration.count();
 }
 inline void printrgb(rgb color) {
@@ -65,7 +65,7 @@ inline void printRGB(RGB color) {
 }
 
 
-inline RGB indexed_value(RGB START, RGB END, int limit, int INDEX) {
+inline RGB indexed_value(const RGB START, const RGB END, const int limit, const int INDEX) {
     if (limit <= 1) return START;
     if (INDEX <= 1) return START;
     if (INDEX >= limit) return END;
@@ -77,16 +77,15 @@ inline RGB indexed_value(RGB START, RGB END, int limit, int INDEX) {
     };
 }
 
-inline int nearest_index(RGB value_to_match, RGB START, RGB END, int limit) {
+inline int nearest_index(const RGB value_to_match, const RGB START, const RGB END, const int limit) {
     int result = 1;
     float min_distance = std::numeric_limits<float>::max();
     for (int i = 1; i <= limit; i++) {
-        RGB n = indexed_value(START, END, limit, i);
-        float dr = n.r - value_to_match.r;
-        float dg = n.g - value_to_match.g;
-        float db = n.b - value_to_match.b;
-        float distance = dr * dr + dg * dg + db * db; // Euclidean distance squared
-        if (distance < min_distance) {
+        auto [r, g, b] = indexed_value(START, END, limit, i);
+        const float dr = r - value_to_match.r;
+        const float dg = g - value_to_match.g;
+        const float db = b - value_to_match.b;
+        if (const float distance = dr * dr + dg * dg + db * db; distance < min_distance) {
             min_distance = distance;
             result = i;
         }
@@ -95,11 +94,11 @@ inline int nearest_index(RGB value_to_match, RGB START, RGB END, int limit) {
 }
 
 
-inline RGB average(RGB v1, RGB v2) {
+inline RGB average(const RGB v1, const RGB v2) {
     return {(v1.r + v2.r)/2, (v1.g + v2.g)/2, (v1.b + v2.b)/2};
 }
 
-inline RGB average_clamped(RGB v1, RGB v2, float weight) {
+inline RGB average_clamped(const RGB v1, const RGB v2, float weight) {
     // Clamp weight to [0.0, 1.0] range
     if (weight < 0.0) weight = 0.0f;
     if (weight > 1.0) weight = 1.0f;

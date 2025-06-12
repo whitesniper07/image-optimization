@@ -21,7 +21,7 @@ void extract_main_values(vector<vector<CRGB>>& linked_image,vector<MRGB>& linked
     for (size_t x = 0; x < index_list.size(); x++) {
         for (size_t y = 0; y < index_list[0].size(); y++) {
             if (index_list[x][y] == -1)continue;
-            int index = index_list[x][y];
+            const int index = index_list[x][y];
             arranged_values.push_back({
                 linked_to[index].value,
                 linked_to[index].coordinate,
@@ -29,9 +29,9 @@ void extract_main_values(vector<vector<CRGB>>& linked_image,vector<MRGB>& linked
             });
 
             for (size_t i = 0; i < linked_to[index].connected_RGBs.size(); i++) {
-                auto p = linked_to[index].connected_RGBs[i];
+                auto [fst, snd] = linked_to[index].connected_RGBs[i];
 
-                linked_image[p.first][p.second].main_RGB_index = arranged_values.size() - 1;
+                linked_image[fst][snd].main_RGB_index = arranged_values.size() - 1;
             }
         }
     }
@@ -41,34 +41,34 @@ void extract_main_values(vector<vector<CRGB>>& linked_image,vector<MRGB>& linked
 
 
 int main(int argc, char const *argv[]) {
-    vector<string> locations = {};
-    auto start_image = openImage(locations[0]);
+    const vector<string> locations = {};
+    const auto start_image = openImage(locations[0]);
+
     vector<vector<RGB>> RGBpixels;
     for (const auto& row : start_image) {
         RGBpixels.push_back({});
-        for (const auto& pixel : row) {
-            RGBpixels.back().push_back({static_cast<float>(pixel.r), static_cast<float>(pixel.g), static_cast<float>(pixel.b)});
+        for (const auto&[r, g, b] : row) {
+            RGBpixels.back().push_back({static_cast<float>(r), static_cast<float>(g), static_cast<float>(b)});
         }
     }
 
     block b;
-    int height = RGBpixels.size();
-    int width = RGBpixels[0].size();
+    const int height = RGBpixels.size();
+    const int width = RGBpixels[0].size();
     vector<MRGB> linked_to;
     vector<vector<CRGB>> linked_image(height, vector<CRGB>(width, {{0, 0, 0}, -1}));
     cout << height << " " << width << '\n';
-
 
     startTimer();
     b.make_block(RGBpixels, linked_to, linked_image);
     
     extract_main_values(linked_image, linked_to);
-    auto t = stopTimer();
+    const auto t = stopTimer();
     cout << "time taken = " << t << '\n';
 
 
 
-    float p = (static_cast<float>(linked_to.size()) / static_cast<float>(linked_image.size() * linked_image[0].size())) * 100.0f;
+    const float p = (static_cast<float>(linked_to.size()) / static_cast<float>(linked_image.size() * linked_image[0].size())) * 100.0f;
     cout << linked_to.size() << " " << linked_image.size() * linked_image[0].size() << " " << p << '\n';
     cout << (linked_to.size() / 2)/1000 << " KB. old - " << (linked_image.size() * linked_image[0].size() * 3)/1000 << " KB" << '\n';
 

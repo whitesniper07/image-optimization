@@ -22,7 +22,7 @@ inline std::vector<std::vector<rgb>> openImage(const std::string& imagePath) {
 
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            int index = (i * width + j) * 3;
+            const int index = (i * width + j) * 3;
             pixels[i][j] = { static_cast<int>(img[index]), static_cast<int>(img[index + 1]), static_cast<int>(img[index + 2]) };
         }
     }
@@ -32,8 +32,8 @@ inline std::vector<std::vector<rgb>> openImage(const std::string& imagePath) {
 }
 
 inline void saveImage(const std::vector<std::vector<rgb>>& image, const std::string& outPath) {
-    int height = image.size();
-    int width = image[0].size();
+    const int height = image.size();
+    const int width = image[0].size();
     std::vector<unsigned char> data;
     data.reserve(width * height * 3);
     for (const auto& row : image) {
@@ -214,7 +214,7 @@ class block {
             if (!flag)return;
 
             // If not, subdivide the block into four smaller blocks (quadrants).
-            int half_size = size / 2;
+            const int half_size = size / 2;
             process_block(original_pixels, linked_to, linked_image, x, y, half_size, threshold);
 
             if (x + half_size < original_pixels.size()) 
@@ -238,16 +238,16 @@ class block {
 
 
         // Get the image dimensions.
-        int height = original_image.size();
-        int width = original_image[0].size();
+        const int height = original_image.size();
+        const int width = original_image[0].size();
 
         // Set the initial block size.
-        const int block_size = 8;
+        constexpr int block_size = 8;
 
         // Loop over the image in steps defined by block_size.
         for (int x = 0; x < height; x += block_size) {
             for (int y = 0; y < width; y += block_size) {
-                int current_size = min(block_size, min(height - x, width - y));
+                const int current_size = min(block_size, min(height - x, width - y));
                 process_block(original_image, linked_to, linked_image, x, y, current_size, 20.0);
             }
         }

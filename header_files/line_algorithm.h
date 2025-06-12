@@ -1,5 +1,5 @@
-#ifndef ALGO2_H
-#define ALGO2_H
+#ifndef LINE_ALGORITHM_H
+#define LINE_ALGORITHM_H
 
 #include <utility> // for std::pair
 #include <cmath>   // for std::sqrt
@@ -83,7 +83,7 @@ Vector3 power_iteration(const float mat[3][3],const int max_iter = 20,const floa
 
 
 // Main function to check if new_pixel is on the line
-bool is_on_line(
+pair<bool, float> is_on_line(
     vector<MRGB>& pixels,
     vector<int>& pixels_indexs,
     vector<float>& pixels_distance,
@@ -93,7 +93,7 @@ bool is_on_line(
 
     int n = pixels_indexs.size();
     if (n < 2) {
-        return false; // Need at least 2 points to define a line
+        return {false, NULL}; // Need at least 2 points to define a line
     }
 
     // Compute centroid
@@ -138,16 +138,16 @@ bool is_on_line(
 
     // Check threshold and update pixels if within
     if (distance <= threshold) {
-        pixels_indexs.push_back(new_pixel_index);
-        pixels_distance.push_back(distance);
-        return true;
+        // pixels_indexs.push_back(new_pixel_index);
+        // pixels_distance.push_back(distance);
+        return {true, distance};
     }
-    return false;
+    return {false, NULL};
 }
 
 
 // Main function to adjust the line and include new_pixel
-bool can_be_on_line(
+pair<bool,pair<float, vector<float>>> can_be_on_line(
     vector<MRGB>& pixels,
     vector<int>& pixels_indexs,
     vector<float>& pixels_distance,
@@ -158,7 +158,7 @@ bool can_be_on_line(
     if (pixels_indexs.empty()) {
         pixels_indexs.push_back(new_pixel_index);
         pixels_distance.push_back(0.0);
-        return true;
+        return {true, {0.0, pixels_distance}};
     }
 
     // Collect all points including new_pixel
@@ -201,7 +201,7 @@ bool can_be_on_line(
 
     // Step 4: Compute distances to the new line and check threshold
     bool all_within_threshold = true;
-    std::vector<float> new_distances(n - 1, 0.0); // Store distances for existing pixels
+    vector<float> new_distances(n - 1, 0.0); // Store distances for existing pixels
     float new_pixel_distance = 0.0;
 
     for (int i = 0; i < n; ++i) {
@@ -229,15 +229,106 @@ bool can_be_on_line(
 
     // Step 5: If all points are within threshold, update pixels and return true
     if (all_within_threshold) {
-        for (int i = 0; i < pixels_distance.size(); ++i) {
-            pixels_distance[i] = new_distances[i];
-        }
-        pixels_indexs.push_back(new_pixel_index);
-        pixels_distance.push_back(new_pixel_distance);
-        return true;
+        // for (int i = 0; i < pixels_distance.size(); ++i) {
+        //     pixels_distance[i] = new_distances[i];
+        // }
+        // pixels_indexs.push_back(new_pixel_index);
+        // pixels_distance.push_back(new_pixel_distance);
+        return {true, {new_pixel_distance, new_distances}};
     }
 
-    return false;
+    return {false, {NULL, {}}};
+}
+
+auto search_on_the_line(vector<int>* last_line, vector<float>* last_line_distence, const int current_pixel, const float threshold) {
+
+}
+
+auto calculate_lines(const vector<MRGB>& pixels, const float threshold) {
+    if (pixels.empty()) {
+        return vector<vector<int>>{};
+    }
+
+    vector<vector<int>> lines;
+    vector<vector<float>> lines_distences;
+    vector<int> pixels_indexs;
+
+    pixels_indexs.reserve(pixels.size());
+    for (size_t i = 0; i < pixels.size(); i++) {
+        pixels_indexs[i] = i;
+    }
+    
+
+    lines.reserve(pixels.size() / 2);
+    lines_distences.reserve(pixels.size() / 2);
+
+    vector<int>* last_line = nullptr;
+    vector<float>* last_line_distence = nullptr;
+
+    // Process pixels
+    for (size_t i = 0; i < pixels_indexs.size(); ++i) {
+        bool added = false;
+        const int current_pixel = i;
+
+        // && search_on_the_line(*last_line,*last_line_distence, current_pixel,(current_pixel.is_setted <= 1) ? threshold/2 : threshold)
+        if (last_line) {
+            added = true;
+        } 
+        else if (!lines.empty()) {
+            int end = min(static_cast<int>(lines.size()), 32);
+
+            for (int j = end - 1; j >= 0; --j) {
+                // search_on_the_line(lines[j], lines_distences[j], current_pixel,(current_pixel.is_setted <= 1) ? threshold/2 : threshold)
+                if (true) {
+                    added = true;
+                    last_line = &lines[j];
+                    last_line_distence = &lines_distences[j];
+                    break;
+                }
+            }
+        }
+
+        // If not added, start a new line.
+        if (!added) {
+            lines.push_back({current_pixel});
+            lines_distences.push_back({0.0});
+
+            last_line = &lines.back();
+            last_line_distence = &lines_distences.back();
+
+            // If possible, initialize new line with the next pixel.
+            if (i + 1 < pixels_indexs.size()) {
+                lines.back().push_back(i + 1);
+                lines_distences.back().push_back(0.0);
+                ++i;
+            }
+        }
+    }
+    return lines;
+}
+
+
+pair<RGB,RGB> find_end_points(const vector<MRGB>& pixels, vector<int>& pixels_indexs){
+    if (pixels_indexs.size() == 2)
+        return {pixels[pixels_indexs[0]].value, pixels[pixels_indexs[1]].value};
+    
+    float max_dist_sq = 0.0;
+    pair<int, int> final_index = {0, 1};
+    
+    for (size_t x = 0; x < pixels_indexs.size(); x++) {
+        for (size_t y = x + 1; y < pixels_indexs.size(); y++) {
+            float dr = pixels[pixels_indexs[x]].value.r - pixels[pixels_indexs[y]].value.r;
+            float dg = pixels[pixels_indexs[x]].value.g - pixels[pixels_indexs[y]].value.g;
+            float db = pixels[pixels_indexs[x]].value.b - pixels[pixels_indexs[y]].value.b;
+            float dist_sq = dr * dr + dg * dg + db * db;
+            if (dist_sq > max_dist_sq) {
+                max_dist_sq = dist_sq;
+                final_index.first = x;
+                final_index.second = y;
+            }
+        }
+    }
+    return {pixels[final_index.first].value, pixels[final_index.second].value};
 }
 
 
