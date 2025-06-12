@@ -242,7 +242,7 @@ class block {
         const int width = original_image[0].size();
 
         // Set the initial block size.
-        constexpr int block_size = 8;
+        constexpr int block_size = 16;
 
         // Loop over the image in steps defined by block_size.
         for (int x = 0; x < height; x += block_size) {

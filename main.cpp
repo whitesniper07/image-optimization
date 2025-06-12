@@ -41,7 +41,7 @@ void extract_main_values(vector<vector<CRGB>>& linked_image,vector<MRGB>& linked
 
 
 int main(int argc, char const *argv[]) {
-    const vector<string> locations = {};
+    const vector<string> locations = {"images/jesko 3 low.jpg", "images/darth vader.jpg"};
     const auto start_image = openImage(locations[0]);
 
     vector<vector<RGB>> RGBpixels;
@@ -72,9 +72,24 @@ int main(int argc, char const *argv[]) {
     cout << linked_to.size() << " " << linked_image.size() * linked_image[0].size() << " " << p << '\n';
     cout << (linked_to.size() / 2)/1000 << " KB. old - " << (linked_image.size() * linked_image[0].size() * 3)/1000 << " KB" << '\n';
 
+    cout << "timer is started\n";
+    startTimer();
+    auto lines = calculate_lines(linked_to, 20);
+    const auto t2 = stopTimer();
+    cout << "time taken = " << t2 << " lines size - " << lines.size() << '\n';
 
-    smooth s;
-    s.smooth_the_image(linked_image, linked_to);
+
+    
+    for (size_t x = 0; x < lines.size(); x++) {
+        for (size_t y = 0; y < lines[x].size(); y++) {
+            printRGB(linked_to[lines[x][y]].value);
+        }
+        cout << "|\n";
+    }
+    
+    
+    // smooth s;
+    // s.smooth_the_image(linked_image, linked_to);
 
     vector<vector<rgb>> image(linked_image.size(),vector<rgb>(linked_image[0].size()));
 
@@ -88,7 +103,7 @@ int main(int argc, char const *argv[]) {
         }
     }
     
-    saveImage(image, "images/image.png");
+    // saveImage(image, "images/image.png");
     cout << "done\n";
     return 0;
 }
