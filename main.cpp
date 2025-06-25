@@ -39,9 +39,47 @@ void extract_main_values(vector<vector<CRGB>>& linked_image,vector<MRGB>& linked
 };
 
 
+float calculate_data_reduction(const vector<vector<int>>& indexes) {
+    int data_size = 0, orignal_data_size = 0;
+    for (size_t x = 0; x < indexes.size(); x++) {
+        int sub_ds = 0;
+        int sub_ods = 0;
+        for (size_t y = 0; y < indexes[x].size(); y++) {
+            sub_ods += 5;
+            if (indexes[x][y] == 0) {
+                sub_ds += 5;
+                continue;
+            }
+            if (y > 0 && abs(indexes[x][y] - indexes[x][y - 1]) < 4) {
+                sub_ds += 3;
+            }
+            else {
+                sub_ds += 8;
+            }
+        }
+        if (sub_ods <= sub_ds) {
+            data_size += sub_ods + 1;
+            orignal_data_size += sub_ods;
+        }
+        else {
+            data_size += sub_ds;
+            orignal_data_size += sub_ods;
+        }
+    }
+    
+    return 100.f - (static_cast<float>(data_size) / static_cast<float>(orignal_data_size) * 100.f);
+}
+
+bool in_even(const int n) {
+    return n % 2 == 0;
+}
+
 
 int main(int argc, char const *argv[]) {
-    const vector<string> locations = {"images/jesko 3 low.jpg", "images/darth vader.jpg"};
+
+    cout << "is running" << endl;
+    const vector<string> locations = {"D:\vasu/programs/image-optimization/images/Jesko 3.jpg",
+        "images/darth vader.jpg", "images/hong kong.jpg"};
     const auto start_image = openImage(locations[0]);
 
     vector<vector<RGB>> RGBpixels;
@@ -78,14 +116,28 @@ int main(int argc, char const *argv[]) {
     const auto t2 = stopTimer();
     cout << "time taken = " << t2 << " lines size - " << lines.size() << '\n';
 
-
-    
+    vector<vector<int>> indexes;
     for (size_t x = 0; x < lines.size(); x++) {
+        indexes.push_back({});
+        auto end_points = find_end_points(linked_to, lines[x]);
+        printRGB(end_points.first);
+        printRGB(end_points.second);
+        cout << ' ';
         for (size_t y = 0; y < lines[x].size(); y++) {
-            printRGB(linked_to[lines[x][y]].value);
+            indexes.back().push_back(nearest_index(linked_to[lines[x][y]].value, end_points.first, end_points.second, 32));
+            linked_to[lines[x][y]].value = indexed_value(end_points.first, end_points.second, 32, indexes.back().back());
         }
-        cout << "|\n";
     }
+    // Replace the selection with:
+    float percentage_of_reduction = calculate_data_reduction(indexes);
+    cout << "data size - " << percentage_of_reduction << '\n';
+
+    // for (size_t x = 0; x < lines.size(); x++) {
+    //     for (size_t y = 0; y < lines[x].size(); y++) {
+    //         printRGB(linked_to[lines[x][y]].value);
+    //     }
+    //     cout << "|\n";
+    // }
     
     
     // smooth s;
@@ -96,15 +148,17 @@ int main(int argc, char const *argv[]) {
     for (int x = 0; x < linked_image.size(); x++) {
         for (int y = 0; y < linked_image[x].size(); y++) {
             if (linked_image[x][y].main_RGB_index != -1) {
-                image[x][y] = to_rgb(linked_image[x][y].value);
+                image[x][y] = to_rgb(linked_to[linked_image[x][y].main_RGB_index].value);
             } else {
                 image[x][y] = {0, 0, 255};
             }
         }
     }
     
-    // saveImage(image, "images/image.png");
+    saveImage(image, "images/image.png");
     cout << "done\n";
     return 0;
 }
 
+// -O3 -march=native -msse4.1
+// cd "d:\vasu\programs\image-optimization\" ; if ($?) { g++ -O3 -march=native -flto -funroll-loops main.cpp -o main } ; if ($?) { .\main }
